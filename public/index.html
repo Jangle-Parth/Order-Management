@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Manufacturing Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
+</head>
+<body>
+    <header>
+        <h1>Ashtavinayaka Technocrafts Pvt Ltd</h1>
+        <h2>Tank Manufacturing Management System</h2>
+    </header>
+
+    <main>
+        <section id="new-tank-section">
+            <h3>Add New Tank</h3>
+            <div class="form-container">
+                <select id="tank-type">
+                    <option value="">Select Tank Type</option>
+                    <option value="Acid Storage Tank">Acid Storage Tank</option>
+                    <option value="Milk Storage Tank">Milk Storage Tank</option>
+                    <option value="HMST">HMST</option>
+                    <option value="VMST">VMST</option>
+                </select>
+                <input type="date" id="delivery-date" placeholder="Delivery Date">
+                <button onclick="addNewTank()">Add Tank</button>
+            </div>
+        </section>
+
+        <section id="task-board">
+            <div class="column" id="not-started">
+                <h3>Not Started</h3>
+                <div class="task-list"></div>
+            </div>
+            <div class="column" id="ongoing">
+                <h3>Ongoing</h3>
+                <div class="task-list"></div>
+            </div>
+            <div class="column" id="completed">
+                <h3>Completed</h3>
+                <div class="task-list"></div>
+            </div>
+            <div class="column" id="qc-done">
+                <h3>QC Done</h3>
+                <div class="task-list"></div>
+            </div>
+        </section>
+
+        <button id="generate-report" onclick="generateReport()">Generate Report</button>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
