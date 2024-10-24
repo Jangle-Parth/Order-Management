@@ -1,0 +1,19 @@
+{
+  "tasks": [
+    {
+      "sfg_code": "SFG001",
+      "workers_required": 5,
+      "time_required_hrs": 8
+    },
+    {
+      "sfg_code": "SFG002",
+      "workers_required": 3,
+      "time_required_hrs": 5
+    },
+    {
+      "sfg_code": "SFG003",
+      "workers_required": 4,
+      "time_required_hrs": 7
+    }
+  ]
+}
