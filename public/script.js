@@ -1,117 +1,141 @@
+// Main application logic
 let drake;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     initializeDragula();
-    loadTanks();
+    initializeEventListeners();
 });
 
 function initializeDragula() {
-    const containers = Array.from(document.querySelectorAll('.task-list'));
-    drake = dragula(containers);
+    const columns = [
+        document.getElementById('openColumn'),
+        document.getElementById('ongoingColumn'),
+        document.getElementById('completedColumn'),
+        document.getElementById('qcColumn')
+    ];
+
+    drake = dragula(columns);
     
-    drake.on('drop', (el, target, source) => {
-        const tankId = el.dataset.tankId;
-        const newStatus = target.parentElement.id;
-        updateTankStatus(tankId, newStatus);
+    drake.on('drop', function(el, target, source) {
+        const processId = el.getAttribute('data-process-id');
+        const newStatus = target.id.replace('Column', '');
+        
+        updateProcessStatus(processId, newStatus);
+        checkProcessCompletion(el.getAttribute('data-tank-id'));
     });
 }
 
-async function loadTanks() {
-    try {
-        const response = await fetch('/api/tanks');
-        const tanks = await response.json();
-        displayTanks(tanks);
-    } catch (error) {
-        console.error('Error loading tanks:', error);
-    }
+function initializeEventListeners() {
+    document.getElementById('tankForm').addEventListener('submit', handleTankSubmission);
 }
 
-function displayTanks(tanks) {
-    const columns = {
-        'new': document.querySelector('#not-started .task-list'),
-        'ongoing': document.querySelector('#ongoing .task-list'),
-        'completed': document.querySelector('#completed .task-list'),
-        'qc-done': document.querySelector('#qc-done .task-list')
-    };
-
-    // Clear existing tasks
-    Object.values(columns).forEach(column => column.innerHTML = '');
-
-    // Distribute tanks to appropriate columns
-    tanks.forEach(tank => {
-        const tankCard = createTankCard(tank);
-        columns[tank.status].appendChild(tankCard);
-    });
-}
-
-function createTankCard(tank) {
-    const div = document.createElement('div');
-    div.className = 'task-card';
-    div.dataset.tankId = tank.id;
-    div.innerHTML = `
-        <h4>${tank.type}</h4>
-        <p>ID: ${tank.id}</p>
-        <p>Delivery: ${tank.deliveryDate}</p>
-    `;
-    return div;
-}
-
-async function addNewTank() {
-    const type = document.getElementById('tank-type').value;
-    const deliveryDate = document.getElementById('delivery-date').value;
+async function handleTankSubmission(e) {
+    e.preventDefault();
     
-    if (!type || !deliveryDate) {
-        alert('Please fill in all fields');
-        return;
-    }
-
-    const newTank = {
-        id: generateTankId(type),
-        type,
-        deliveryDate,
-        status: 'new'
-    };
+    const formData = new FormData();
+    formData.append('tankType', document.getElementById('tankType').value);
+    formData.append('capacity', document.getElementById('capacity').value);
+    formData.append('deliveryDate', document.getElementById('deliveryDate').value);
+    formData.append('clientName', document.getElementById('clientName').value);
+    formData.append('bom', document.getElementById('bom').files[0]);
 
     try {
         const response = await fetch('/api/tanks', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newTank)
+            body: formData
         });
 
-        if (response.ok) {
-            loadTanks();
-        }
+        if (!response.ok) throw new Error('Failed to add tank');
+
+        const data = await response.json();
+        renderProcessCards(data.processes);
+        showSuccessMessage('Tank added successfully');
     } catch (error) {
-        console.error('Error adding tank:', error);
+        showErrorMessage('Failed to add tank: ' + error.message);
     }
 }
 
-function generateTankId(type) {
-    const prefix = type.split(' ').map(word => word[0]).join('');
-    return `${prefix}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+function renderProcessCards(processes) {
+    const openColumn = document.getElementById('openColumn');
+    
+    processes.forEach(process => {
+        const card = createProcessCard(process);
+        openColumn.appendChild(card);
+    });
 }
 
-async function updateTankStatus(tankId, newStatus) {
+function createProcessCard(process) {
+    const card = document.createElement('div');
+    card.className = 'process-card';
+    card.setAttribute('data-process-id', process.id);
+    card.setAttribute('data-tank-id', process.tankId);
+
+    card.innerHTML = `
+        <h4>${process.tankName} - ${process.processName}</h4>
+        <p>Serial: ${process.serialNo}</p>
+        <p>Workers: ${process.workers}</p>
+        <p>Time: ${process.timeToComplete} days</p>
+        <p>Added: ${new Date(process.addedAt).toLocaleString()}</p>
+    `;
+
+    return card;
+}
+
+async function updateProcessStatus(processId, newStatus) {
     try {
-        const response = await fetch(`/api/tanks/${tankId}/status`, {
-            method: 'PUT',
+        const response = await fetch(`/api/processes/${processId}/status`, {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ status: newStatus })
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to update tank status');
-        }
+        if (!response.ok) throw new Error('Failed to update status');
     } catch (error) {
-        console.error('Error updating tank status:', error);
+        showErrorMessage('Failed to update process status: ' + error.message);
     }
 }
 
-function generateReport() {
-    window.open('/api/report', '_blank');
+async function checkProcessCompletion(tankId) {
+    try {
+        const response = await fetch(`/api/tanks/${tankId}/check-completion`);
+        const data = await response.json();
+
+        if (data.isComplete) {
+            showFinalQCDialog(tankId);
+        }
+    } catch (error) {
+        showErrorMessage('Failed to check completion: ' + error.message);
+    }
+}
+
+function showFinalQCDialog(tankId) {
+    if (confirm('All processes are complete. Would you like to book final QC?')) {
+        bookFinalQC(tankId);
+    }
+}
+
+async function bookFinalQC(tankId) {
+    try {
+        const response = await fetch(`/api/tanks/${tankId}/final-qc`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) throw new Error('Failed to book final QC');
+
+        removeCompletedProcessCards(tankId);
+        showSuccessMessage('Final QC booked successfully');
+    } catch (error) {
+        showErrorMessage('Failed to book final QC: ' + error.message);
+    }
+}
+
+function showSuccessMessage(message) {
+    alert(message);  // You can improve this UI if needed
+    document.body.style.backgroundColor = "lightblue";  // Change background to light blue
+}
+
+function showErrorMessage(message) {
+    alert(message);  // You can improve this UI if needed
 }

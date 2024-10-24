@@ -3,55 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tank Manufacturing Management</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
+    <title>Tank Manufacturing ERP</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.css" rel="stylesheet">
+    <link href="/styles.css" rel="stylesheet"> <!-- Linking the updated CSS -->
 </head>
 <body>
-    <header>
-        <h1>Ashtavinayaka Technocrafts Pvt Ltd</h1>
-        <h2>Tank Manufacturing Management System</h2>
+    <header class="header">
+        <img src=" logo.png" alt="Company Logo" class="logo">
+        <h1 class="company-name">Tank Manufacturing ERP</h1>
     </header>
 
-    <main>
-        <section id="new-tank-section">
-            <h3>Add New Tank</h3>
-            <div class="form-container">
-                <select id="tank-type">
+    <div class="container">
+        <form class="tank-form" id="tankForm">
+            <div class="form-group">
+                <label for="tankType">Tank Type</label>
+                <select class="form-control" id="tankType" required>
                     <option value="">Select Tank Type</option>
-                    <option value="Acid Storage Tank">Acid Storage Tank</option>
-                    <option value="Milk Storage Tank">Milk Storage Tank</option>
-                    <option value="HMST">HMST</option>
-                    <option value="VMST">VMST</option>
+                    <option value="acid">Acid Storage Tank</option>
+                    <option value="milk">Milk Storage Tank</option>
+                    <option value="vmst">VMST Tank</option>
+                    <option value="hmst">HMST Tank</option>
                 </select>
-                <input type="date" id="delivery-date" placeholder="Delivery Date">
-                <button onclick="addNewTank()">Add Tank</button>
             </div>
-        </section>
 
-        <section id="task-board">
-            <div class="column" id="not-started">
-                <h3>Not Started</h3>
-                <div class="task-list"></div>
+            <div class="form-group">
+                <label for="capacity">Capacity (KL)</label>
+                <input type="number" class="form-control" id="capacity" required>
             </div>
-            <div class="column" id="ongoing">
-                <h3>Ongoing</h3>
-                <div class="task-list"></div>
-            </div>
-            <div class="column" id="completed">
-                <h3>Completed</h3>
-                <div class="task-list"></div>
-            </div>
-            <div class="column" id="qc-done">
-                <h3>QC Done</h3>
-                <div class="task-list"></div>
-            </div>
-        </section>
 
-        <button id="generate-report" onclick="generateReport()">Generate Report</button>
-    </main>
+            <div class="form-group">
+                <label for="deliveryDate">Delivery Date</label>
+                <input type="date" class="form-control" id="deliveryDate" required>
+            </div>
 
-    <script src="script.js"></script>
+            <div class="form-group">
+                <label for="clientName">Client Name</label>
+                <input type="text" class="form-control" id="clientName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="bom">Bill of Materials (Excel)</label>
+                <input type="file" class="form-control" id="bom" accept=".xlsx,.xls" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add Tank</button>
+        </form>
+
+        <div class="process-columns">
+            <div class="column" id="openColumn">
+                <h3 class="column-header">Open</h3>
+                <!-- Process cards will be dynamically added here -->
+            </div>
+
+            <div class="column" id="ongoingColumn">
+                <h3 class="column-header">Ongoing</h3>
+            </div>
+
+            <div class="column" id="completedColumn">
+                <h3 class="column-header">Completed</h3>
+            </div>
+
+            <div class="column" id="qcColumn">
+                <h3 class="column-header">QC Accepted</h3>
+            </div>
+        </div>
+
+        <div class="report-buttons">
+            <button class="btn btn-primary" onclick="generateReport('open')">Open Jobs Report</button>
+            <button class="btn btn-primary" onclick="generateReport('ongoing')">Ongoing Jobs Report</button>
+            <button class="btn btn-primary" onclick="generateReport('qc-pending')">QC Pending Report</button>
+            <button class="btn btn-primary" onclick="generateReport('final-qc')">Final QC Pending Report</button>
+            <button class="btn btn-primary" onclick="generateReport('completed')">Completed Jobs Report</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.js"></script>
+    <script src="/script.js"></script>
 </body>
 </html>

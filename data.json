@@ -1,0 +1,96 @@
+{
+  "tanks": [
+    {
+      "id": "1729787034418",
+      "tankType": "milk",
+      "capacity": 100,
+      "deliveryDate": "2024-10-24T00:00:00.000Z",
+      "clientName": "VBL",
+      "status": "open",
+      "createdAt": "2024-10-24T16:23:54.418Z"
+    },
+    {
+      "id": "1729787270244",
+      "tankType": "vmst",
+      "capacity": 10,
+      "deliveryDate": "2024-10-24T00:00:00.000Z",
+      "clientName": "VBL",
+      "status": "open",
+      "createdAt": "2024-10-24T16:27:50.244Z"
+    }
+  ],
+  "processes": [
+    {
+      "id": "1729787034546-1",
+      "tankId": "1729787034418",
+      "tankName": "milk - 100KL",
+      "processName": "NOS",
+      "serialNo": "1.1",
+      "sfgCode": "SFG01715",
+      "workers": 5,
+      "timeToComplete": 21,
+      "status": "open",
+      "addedAt": "2024-10-24T16:23:54.546Z"
+    },
+    {
+      "id": "1729787034546-1",
+      "tankId": "1729787034418",
+      "tankName": "milk - 100KL",
+      "processName": "NOS",
+      "serialNo": "1.2",
+      "sfgCode": "SFG01714",
+      "workers": 4,
+      "timeToComplete": 27,
+      "status": "open",
+      "addedAt": "2024-10-24T16:23:54.546Z"
+    },
+    {
+      "id": "1729787034546-1",
+      "tankId": "1729787034418",
+      "tankName": "milk - 100KL",
+      "processName": "NOS",
+      "serialNo": "1.3",
+      "sfgCode": "SFG00162",
+      "workers": 5,
+      "timeToComplete": 9,
+      "status": "open",
+      "addedAt": "2024-10-24T16:23:54.546Z"
+    },
+    {
+      "id": "1729787270299-1",
+      "tankId": "1729787270244",
+      "tankName": "vmst - 10KL",
+      "processName": "NOS",
+      "serialNo": "1.1",
+      "sfgCode": "SFG01715",
+      "workers": 4,
+      "timeToComplete": 28,
+      "status": "open",
+      "addedAt": "2024-10-24T16:27:50.299Z"
+    },
+    {
+      "id": "1729787270299-1",
+      "tankId": "1729787270244",
+      "tankName": "vmst - 10KL",
+      "processName": "NOS",
+      "serialNo": "1.2",
+      "sfgCode": "SFG01714",
+      "workers": 3,
+      "timeToComplete": 8,
+      "status": "open",
+      "addedAt": "2024-10-24T16:27:50.299Z"
+    },
+    {
+      "id": "1729787270299-1",
+      "tankId": "1729787270244",
+      "tankName": "vmst - 10KL",
+      "processName": "NOS",
+      "serialNo": "1.3",
+      "sfgCode": "SFG00162",
+      "workers": 5,
+      "timeToComplete": 11,
+      "status": "open",
+      "addedAt": "2024-10-24T16:27:50.299Z"
+    }
+  ]
+}

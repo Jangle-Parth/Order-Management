@@ -1,93 +1,198 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root {
+    --primary-light-blue: #e0f7fa;
+    --primary-yellow: #fff8e1;
+    --border-color: #ccc;
+    --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --hover-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    --text-primary: #333;
+    --text-secondary: #555;
+    --btn-blue: #0288d1;
+    --btn-blue-hover: #0277bd;
+    --accent-yellow: #ffd54f;
+    --accent-green: #4caf50;
+    --accent-red: #f44336;
 }
 
 body {
-    font-family: Arial, sans-serif;
+    background-color: var(--primary-light-blue);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
     line-height: 1.6;
-    background-color: #f4f4f4;
 }
 
-header {
-    background-color: #333;
-    color: white;
-    text-align: center;
-    padding: 1rem;
-}
-
-main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-#new-tank-section {
-    background-color: white;
-    padding: 1rem;
-    border-radius: 5px;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.form-container {
+/* Header */
+.header {
+    background: white;
+    padding: 1.5rem 2rem;
+    box-shadow: var(--shadow);
     display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
+    align-items: center;
 }
 
-select, input, button {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
+.logo {
+    width: 100px;
+    height: 100px;
+    margin-right: 1rem;
+    object-fit: contain;
+}
+
+.company-name {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Tank Form */
+.tank-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
+    transition: box-shadow 0.3s ease;
 }
 
-button {
-    background-color: #007bff;
-    color: white;
+.form-control:focus {
+    border-color: var(--btn-blue);
+    box-shadow: 0 0 0 2px rgba(2, 136, 209, 0.2);
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
     border: none;
+    border-radius: 4px;
     cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
 }
 
-button:hover {
-    background-color: #0056b3;
+.btn-primary {
+    background-color: var(--btn-blue);
+    color: white;
 }
 
-#task-board {
+.btn-primary:hover {
+    background-color: var(--btn-blue-hover);
+}
+
+/* Process Columns */
+.process-columns {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 1.5rem;
 }
 
 .column {
-    background-color: white;
-    padding: 1rem;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    min-height: 400px;
+    transition: box-shadow 0.3s ease;
 }
 
-.column h3 {
+.column:hover {
+    box-shadow: var(--hover-shadow);
+}
+
+.column-header {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
     margin-bottom: 1rem;
-    text-align: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
 }
 
-.task-list {
-    min-height: 200px;
-}
-
-.task-card {
-    background-color: #f8f9fa;
+/* Process Cards */
+.process-card {
+    background: var(--primary-yellow);
     padding: 1rem;
-    margin-bottom: 0.5rem;
     border-radius: 4px;
-    cursor: move;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--accent-yellow);
+    transition: box-shadow 0.3s ease;
 }
 
-#generate-report {
-    display: block;
-    margin: 0 auto;
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
+.process-card:hover {
+    box-shadow: var(--hover-shadow);
+}
+
+.process-card h4 {
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.process-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Report Buttons */
+.report-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: center;
+}
+
+.btn-primary {
+    background-color: var(--btn-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--btn-blue-hover);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .process-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .process-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.process-card {
+    animation: slideIn 0.3s ease-out;
 }
