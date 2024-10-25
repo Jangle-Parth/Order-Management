@@ -4,20 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tank Manufacturing ERP</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.css" rel="stylesheet">
-    <link href="/styles.css" rel="stylesheet"> <!-- Linking the updated CSS -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header class="header">
-        <img src=" logo.png" alt="Company Logo" class="logo">
-        <h1 class="company-name">Tank Manufacturing ERP</h1>
+    <header>
+        <img src="logo.png" alt="Company Logo" class="logo">
+        <h1 id="tank-manufacturing-erp" class="company-name">Tank Manufacturing ERP</h1>
     </header>
 
     <div class="container">
-        <form class="tank-form" id="tankForm">
+        <form id="tankForm" class="tank-form">
             <div class="form-group">
                 <label for="tankType">Tank Type</label>
-                <select class="form-control" id="tankType" required>
+                <select id="tankType" name="tankType" required>
                     <option value="">Select Tank Type</option>
                     <option value="acid">Acid Storage Tank</option>
                     <option value="milk">Milk Storage Tank</option>
@@ -28,56 +27,55 @@
 
             <div class="form-group">
                 <label for="capacity">Capacity (KL)</label>
-                <input type="number" class="form-control" id="capacity" required>
+                <input type="number" id="capacity" name="capacity" required>
             </div>
 
             <div class="form-group">
                 <label for="deliveryDate">Delivery Date</label>
-                <input type="date" class="form-control" id="deliveryDate" required>
+                <input type="date" id="deliveryDate" name="deliveryDate" required>
             </div>
 
             <div class="form-group">
                 <label for="clientName">Client Name</label>
-                <input type="text" class="form-control" id="clientName" required>
+                <input type="text" id="clientName" name="clientName" required>
             </div>
 
             <div class="form-group">
                 <label for="bom">Bill of Materials (Excel)</label>
-                <input type="file" class="form-control" id="bom" accept=".xlsx,.xls" required>
+                <input type="file" id="bom" name="bom" accept=".xlsx,.xls" required>
             </div>
 
             <button type="submit" class="btn btn-primary">Add Tank</button>
         </form>
 
         <div class="process-columns">
-            <div class="column" id="openColumn">
+            <div id="openColumn" class="column">
                 <h3 class="column-header">Open</h3>
-                <!-- Process cards will be dynamically added here -->
             </div>
 
-            <div class="column" id="ongoingColumn">
+            <div id="ongoingColumn" class="column">
                 <h3 class="column-header">Ongoing</h3>
             </div>
 
-            <div class="column" id="completedColumn">
+            <div id="completedColumn" class="column">
                 <h3 class="column-header">Completed</h3>
             </div>
 
-            <div class="column" id="qcColumn">
+            <div id="qcColumn" class="column">
                 <h3 class="column-header">QC Accepted</h3>
             </div>
         </div>
 
         <div class="report-buttons">
-            <button class="btn btn-primary" onclick="generateReport('open')">Open Jobs Report</button>
-            <button class="btn btn-primary" onclick="generateReport('ongoing')">Ongoing Jobs Report</button>
-            <button class="btn btn-primary" onclick="generateReport('qc-pending')">QC Pending Report</button>
-            <button class="btn btn-primary" onclick="generateReport('final-qc')">Final QC Pending Report</button>
-            <button class="btn btn-primary" onclick="generateReport('completed')">Completed Jobs Report</button>
+            <button onclick="generateReport('open')" class="btn">Open Jobs Report</button>
+            <button onclick="generateReport('ongoing')" class="btn">Ongoing Jobs Report</button>
+            <button onclick="generateReport('qc-pending')" class="btn">QC Pending Report</button>
+            <button onclick="generateReport('final-qc')" class="btn">Final QC Pending Report</button>
+            <button onclick="generateReport('completed')" class="btn">Completed Jobs Report</button>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.js"></script>
-    <script src="/script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

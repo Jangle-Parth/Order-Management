@@ -37,23 +37,19 @@ async function writeData(data) {
 
 // Helper function to get task requirements
 function getTaskRequirements(sfgCode, taskRequirements) {
-    const task = taskRequirements.tasks.find(t =>
-        t.sfg_code.toLowerCase() === sfgCode.toLowerCase()
+    console.log("Inside the function. SFG Code:", sfgCode);
+    console.log("Task Requirements:", taskRequirements.tasks);
+    const normalizedSfgCode = sfgCode.toLowerCase();
+    const matchedvalues = taskRequirements.tasks.filter(task =>
+        normalizedSfgCode === task.sfg_code.toLowerCase()
     );
-
-    if (task) {
+    console.log("Filtered Task:", matchedvalues);
         return {
-            workers: task.workers_required,
-            timeToComplete: Math.ceil(task.time_required_hrs / 8) // Convert hours to days
+            workers_required: matchedvalues[0].workers_required,  // Corrected access to matchedvalues
+            time_required_hrs: matchedvalues[0].time_required_hrs
         };
-    }
-
-    // Default values if task not found
-    return {
-        workers: 2,
-        timeToComplete: 1
-    };
 }
+
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -124,6 +120,8 @@ app.post('/api/tanks', upload.single('bom'), async (req, res) => {
 
         const data = await readData();
         const taskRequirements = await readTaskRequirements();
+        console.log("Task Requirements:", taskRequirements);
+
 
         // Create new tank
         const tank = {
@@ -140,34 +138,42 @@ app.post('/api/tanks', upload.single('bom'), async (req, res) => {
 
         // Process BOM file
         const bomData = await readExcelFile(req.file.path);
+        console.log("BOM Data:", bomData);
         const processes = [];
+        const sfgEntries = bomData.map(item => item['No.']).filter(code => code && code.toString().toLowerCase().startsWith('sfg'));
         let serialNo = 1;
-
-        // Get unique SFG entries
-        const sfgEntries = bomData.filter(item =>
-            item.Code && item.Code.toString().toLowerCase().startsWith('sfg')
-        );
+        
+        console.log("SFG: "+sfgEntries)
 
         for (const item of sfgEntries) {
-            const requirements = getTaskRequirements(item.Code, taskRequirements);
+            const requirements = getTaskRequirements(item, taskRequirements);
+            console.log("Requirements:"+requirements.workers_required)
+            console.log("SFG Code:", item, "Workers:", requirements.workers_required, "Time to Complete:", requirements.time_required_hrs);
 
-            const process = {
-                id: `${Date.now()}-${serialNo}`,
-                tankId: tank.id,
-                tankName: `${tank.tankType} - ${tank.capacity}KL`,
-                processName: item.Description || item.Code,
-                serialNo: `${serialNo}.${processes.length + 1}`,
-                sfgCode: item.Code,
-                workers: requirements.workers,
-                timeToComplete: requirements.timeToComplete,
-                status: 'open',
-                addedAt: new Date()
-            };
-
-            data.processes.push(process);
-            processes.push(process);
+        
+            // Check if requirements indicate a valid task
+            if (requirements) {
+                const process = {
+                    id: `${Date.now()}-${serialNo}`,
+                    tankId: tank.id,
+                    tankName: `${tank.tankType} - ${tank.capacity}KL`,
+                    processName: item.Description || item,
+                    serialNo: `${serialNo}.${processes.length + 1}`,
+                    sfgCode: item,
+                    workers: requirements.workers,
+                    timeToComplete: requirements.timeToComplete,
+                    status: 'open',
+                    addedAt: new Date()
+                };
+        
+                data.processes.push(process);
+                processes.push(process);
+            }
+            else {
+                console.warn(`No task found for SFG Code: ${item}`);
+            }
         }
-
+        
         await writeData(data);
 
         // Cleanup uploaded file
@@ -177,6 +183,45 @@ app.post('/api/tanks', upload.single('bom'), async (req, res) => {
     } catch (error) {
         console.error('Error creating tank:', error);
         res.status(500).json({ error: 'Failed to create tank' });
+    }
+});
+app.patch('/api/processes/:id/status', async (req, res) => {
+    try {
+        const data = await readData();
+        const process = data.processes.find(p => p.id === req.params.id);
+
+        if (!process) {
+            return res.status(404).json({ error: 'Process not found' });
+        }
+
+        // Update the status with the new status from the request body
+        process.status = req.body.status;
+        await writeData(data);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating process status:', error);
+        res.status(500).json({ error: 'Failed to update process status' });
+    }
+});
+
+// Verify process state based on tankId and serialNo
+app.get('/api/processes/check/:tankId/:serialNo', async (req, res) => {
+    try {
+        const data = await readData();
+        const process = data.processes.find(p => 
+            p.tankId === req.params.tankId && 
+            p.serialNo === req.params.serialNo
+        );
+
+        if (!process) {
+            return res.status(404).json({ message: 'Process not found' });
+        }
+
+        res.json({ status: process.status });
+    } catch (error) {
+        console.error('Error verifying process state:', error);
+        res.status(500).json({ message: 'Failed to verify process state' });
     }
 });
 

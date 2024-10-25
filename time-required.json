@@ -14,6 +14,16 @@
       "sfg_code": "SFG003",
       "workers_required": 4,
       "time_required_hrs": 7
+    },
+    {
+      "sfg_code": "SFG00162",
+      "workers_required": 4,
+      "time_required_hrs": 7
+    },
+    {
+      "sfg_code": "SFG01714",
+      "workers_required": 4,
+      "time_required_hrs": 7
     }
   ]
 }
