@@ -144,10 +144,54 @@ function createProcessCard(process) {
     card.setAttribute('data-process-id', process.id);
     card.setAttribute('data-tank-id', process.tankId);
     card.setAttribute('data-serial-no', process.serialNo); // Add this line
+    const addedDate = new Date(process.addedAt);
+    const dueDate = new Date(addedDate);
+    dueDate.setDate(addedDate.getDate() + process.timeToComplete);
+    const today = new Date();
+    const daysRemaining = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+    let statusClass = '';
+    if (daysRemaining < 0) {
+        statusClass = 'overdue';
+    } else if (daysRemaining <= 2) {
+        statusClass = 'due-soon';
+    }
+
+    const formattedAddedDate = addedDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+
+    const dueString = daysRemaining < 0 
+        ? `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) !== 1 ? 's' : ''}`
+        : `Due in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`;
+
+    card.innerHTML = `
+        <h4>${process.tankName}</h4>
+        <p class="process-name">${process.processName}</p>
+        <p class="serial">Serial: ${process.serialNo}</p>
+        <p class="sfg-code">SFG Code: ${process.sfgCode}</p>
+        <p class="workers">Workers Assigned: ${process.workers}</p>
+        <p class="time">Time: ${process.timeToComplete} days</p>
+        <p class="added-date">Added: ${formattedAddedDate}</p>
+        <p class="due-date ${statusClass}">${dueString}</p>
+        ${process.status === 'ongoing' ? `
+            <div class="progress-update">
+                <input type="number" min="0" max="100" value="${process.progress || 0}"
+                    class="progress-input" placeholder="Progress %">
+                <button onclick="updateProgress('${process.id}')" class="btn btn-small">Update</button>
+            </div>
+        ` : ''}
+    `;
 
     return card;
 }
-
+async function handleFetchResponse(response) {
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'An error occurred');
+    }
+}
 // Initialize event listeners
 function initializeEventListeners() {
     const tankForm = document.getElementById('tankForm');
