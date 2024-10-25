@@ -1,49 +1,28 @@
 const express = require('express');
 const multer = require('multer');
 const ExcelJS = require('exceljs');
-const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs').promises;
 const app = express();
 
-// Connect to MongoDB Atlas
-const mongoURI = 'mongodb+srv://parth:parth2005@taskmanager.chek4.mongodb.net/?retryWrites=true&w=majority&appName=TaskManager'; // Replace with your MongoDB Atlas connection string
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Could not connect to MongoDB:', err));
+// Data file paths
+const DATA_FILE = path.join(__dirname, 'data.json');
+const TASK_REQUIREMENTS_FILE = path.join(__dirname, 'time-required.json');
 
-// Define MongoDB Schemas and Models
-const tankSchema = new mongoose.Schema({
-    tankType: String,
-    capacity: Number,
-    deliveryDate: Date,
-    clientName: String,
-    status: { type: String, default: 'open' },
-    createdAt: { type: Date, default: Date.now },
-});
+// Helper function to read data
+async function readData() {
+    try {
+        const data = await fs.readFile(DATA_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        return { tanks: [], processes: [] };
+    }
+}
 
-const processSchema = new mongoose.Schema({
-    tankId: String,
-    tankName: String,
-    processName: String,
-    serialNo: String,
-    sfgCode: String,
-    workers: Number,
-    timeToComplete: Number,
-    status: { type: String, default: 'open' },
-    addedAt: { type: Date, default: Date.now },
-    progress: { type: Number, default: 0 },
-    qcCompleted: { type: Boolean, default: false },
-    finalQcCompleted: { type: Boolean, default: false },
-});
-
-const Tank = mongoose.model('Tank', tankSchema);
-const Process = mongoose.model('Process', processSchema);
-
-// Helper function to read task requirements from a JSON file
+// Helper function to read task requirements
 async function readTaskRequirements() {
     try {
-        const data = await fs.readFile(path.join(__dirname, 'time-required.json'), 'utf8');
+        const data = await fs.readFile(TASK_REQUIREMENTS_FILE, 'utf8');
         return JSON.parse(data);
     } catch (error) {
         console.error('Error reading task requirements:', error);
@@ -51,13 +30,31 @@ async function readTaskRequirements() {
     }
 }
 
+// Helper function to write data
+async function writeData(data) {
+    await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// Helper function to get task requirements
 function getTaskRequirements(sfgCode, taskRequirements) {
+    console.log("Inside the function. SFG Code:", sfgCode);
+    console.log("Task Requirements:", taskRequirements.tasks);
     const normalizedSfgCode = sfgCode.toLowerCase();
-    const matchedValues = taskRequirements.tasks.filter(task =>
+    const matchedvalues = taskRequirements.tasks.filter(task =>
         normalizedSfgCode === task.sfg_code.toLowerCase()
     );
-    return matchedValues.length > 0 ? matchedValues[0] : null;
+    console.log("Filtered Task:", matchedvalues);
+    if (matchedvalues.length > 0) {
+        return {
+            workers_required: matchedvalues[0].workers_required,
+            time_required_hrs: matchedvalues[0].time_required_hrs
+        };
+    } else {
+        console.warn(`No matching task found for SFG Code: ${sfgCode}`);
+        return null;  
+    }
 }
+
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -104,7 +101,8 @@ async function readExcelFile(filePath) {
 
     worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) {
-            headers = row.values.slice(1); // Headers
+            // Store headers
+            headers = row.values.slice(1); // slice(1) because first cell is empty
         } else {
             const rowData = {};
             row.eachCell((cell, colNumber) => {
@@ -125,41 +123,60 @@ app.post('/api/tanks', upload.single('bom'), async (req, res) => {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
+        const data = await readData();
         const taskRequirements = await readTaskRequirements();
+        console.log("Task Requirements:", taskRequirements);
+
 
         // Create new tank
-        const tank = new Tank({
+        const tank = {
+            id: Date.now().toString(),
             tankType: req.body.tankType,
             capacity: Number(req.body.capacity),
             deliveryDate: new Date(req.body.deliveryDate),
-            clientName: req.body.clientName
-        });
+            clientName: req.body.clientName,
+            status: 'open',
+            createdAt: new Date()
+        };
 
-        await tank.save();
+        data.tanks.push(tank);
 
         // Process BOM file
         const bomData = await readExcelFile(req.file.path);
+        console.log("BOM Data:", bomData);
+        const processes = [];
         const sfgEntries = bomData.map(item => item['No.']).filter(code => code && code.toString().toLowerCase().startsWith('sfg'));
         let serialNo = 1;
+        
+        console.log("SFG: "+sfgEntries)
 
-        const processes = [];
         for (const item of sfgEntries) {
             const requirements = getTaskRequirements(item, taskRequirements);
+            console.log("Worker required: " + requirements.workers_required + " time: " + requirements.time_required_hrs);
+            // Check if requirements indicate a valid task
             if (requirements) {
-                const process = new Process({
-                    tankId: tank._id,
+                const process = {
+                    id: `${Date.now()}-${serialNo}`,
+                    tankId: tank.id,
                     tankName: `${tank.tankType} - ${tank.capacity}KL`,
                     processName: item.Description || item,
                     serialNo: `${serialNo}.${processes.length + 1}`,
                     sfgCode: item,
                     workers: requirements.workers_required,
-                    timeToComplete: requirements.time_required_hrs
-                });
-
-                await process.save();
+                    timeToComplete: requirements.time_required_hrs,
+                    status: 'open',
+                    addedAt: new Date()
+                };
+        
+                data.processes.push(process);
                 processes.push(process);
             }
+            else {
+                console.warn(`No task found for SFG Code: ${item}`);
+            }
         }
+        
+        await writeData(data);
 
         // Cleanup uploaded file
         await fs.unlink(req.file.path);
@@ -170,17 +187,18 @@ app.post('/api/tanks', upload.single('bom'), async (req, res) => {
         res.status(500).json({ error: 'Failed to create tank' });
     }
 });
-
-// Update process status
 app.patch('/api/processes/:id/status', async (req, res) => {
     try {
-        const process = await Process.findById(req.params.id);
+        const data = await readData();
+        const process = data.processes.find(p => p.id === req.params.id);
+
         if (!process) {
             return res.status(404).json({ error: 'Process not found' });
         }
 
+        // Update the status with the new status from the request body
         process.status = req.body.status;
-        await process.save();
+        await writeData(data);
 
         res.json({ success: true });
     } catch (error) {
@@ -192,10 +210,11 @@ app.patch('/api/processes/:id/status', async (req, res) => {
 // Verify process state based on tankId and serialNo
 app.get('/api/processes/check/:tankId/:serialNo', async (req, res) => {
     try {
-        const process = await Process.findOne({
-            tankId: req.params.tankId,
-            serialNo: req.params.serialNo
-        });
+        const data = await readData();
+        const process = data.processes.find(p => 
+            p.tankId === req.params.tankId && 
+            p.serialNo === req.params.serialNo
+        );
 
         if (!process) {
             return res.status(404).json({ message: 'Process not found' });
@@ -211,8 +230,8 @@ app.get('/api/processes/check/:tankId/:serialNo', async (req, res) => {
 // Get all processes
 app.get('/api/processes', async (req, res) => {
     try {
-        const processes = await Process.find();
-        res.json({ processes });
+        const data = await readData();
+        res.json({ processes: data.processes });
     } catch (error) {
         console.error('Error fetching processes:', error);
         res.status(500).json({ error: 'Failed to fetch processes' });
@@ -222,13 +241,15 @@ app.get('/api/processes', async (req, res) => {
 // Update process progress
 app.patch('/api/processes/:id/progress', async (req, res) => {
     try {
-        const process = await Process.findById(req.params.id);
+        const data = await readData();
+        const process = data.processes.find(p => p.id === req.params.id);
+
         if (!process) {
             return res.status(404).json({ error: 'Process not found' });
         }
 
         process.progress = req.body.progress;
-        await process.save();
+        await writeData(data);
 
         res.json({ success: true });
     } catch (error) {
@@ -240,31 +261,35 @@ app.patch('/api/processes/:id/progress', async (req, res) => {
 // Generate reports
 app.get('/api/reports/:type', async (req, res) => {
     try {
+        const data = await readData();
         const type = req.params.type;
-        let filter = {};
 
+        let filteredProcesses;
         switch (type) {
             case 'open':
-                filter = { status: 'open' };
+                filteredProcesses = data.processes.filter(p => p.status === 'open');
                 break;
             case 'ongoing':
-                filter = { status: 'ongoing' };
+                filteredProcesses = data.processes.filter(p => p.status === 'ongoing');
                 break;
             case 'completed':
-                filter = { status: 'completed' };
+                filteredProcesses = data.processes.filter(p => p.status === 'completed');
                 break;
             case 'qc-pending':
-                filter = { status: 'completed', qcCompleted: false };
+                filteredProcesses = data.processes.filter(p =>
+                    p.status === 'completed' && !p.qcCompleted
+                );
                 break;
             case 'final-qc':
-                filter = { status: 'completed', qcCompleted: true, finalQcCompleted: false };
+                filteredProcesses = data.processes.filter(p =>
+                    p.status === 'completed' && p.qcCompleted && !p.finalQcCompleted
+                );
                 break;
             default:
                 return res.status(400).json({ error: 'Invalid report type' });
         }
 
-        const processes = await Process.find(filter);
-        res.json({ processes });
+        res.json({ processes: filteredProcesses });
     } catch (error) {
         console.error('Error generating report:', error);
         res.status(500).json({ error: 'Failed to generate report' });
@@ -275,4 +300,5 @@ app.get('/api/reports/:type', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Data will be stored in: ${DATA_FILE}`);
 });
